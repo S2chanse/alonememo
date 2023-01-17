@@ -7,6 +7,7 @@ with open('config.json', 'r') as f:
     config = json.load(f)        
     conn=MongoClient(config["MONGO"]["url"]);
     db=conn.PythonDB;
+#영화정보 가져오기    
 def findMovieInfo(movie_url):
     print(movie_url);   
 
@@ -27,7 +28,8 @@ def input_movieInfo():
     #print(request.is_json)#json데이터가 존재하나?
     if request.is_json:
         params = request.get_json()#해당 데이터 바인딩
-        print(params)
+        #print(params)
+        findMovieInfo(params["url"]);
     return jsonify({"result":"success","resultCode":200});
 if __name__ == '__main__':  
    app.run('0.0.0.0',port=5000,debug=True)
