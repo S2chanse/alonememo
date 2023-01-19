@@ -1,31 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script
-      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+      integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l"
       crossorigin="anonymous"
-    ></script>
+    />
+
+    <!-- 구글폰트 -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Stylish&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>SW사관학교 정글 | 나홀로 메모장</title>
+
+    <!-- style -->
+    <style type="text/css">
+      * {
+        font-family: 'Stylish', sans-serif;
+      }
+
+      .wrap {
+        width: 900px;
+        margin: auto;
+      }
+
+      .comment {
+        color: blue;
+        font-weight: bold;
+      }
+
+      #post-box {
+        width: 500px;
+        margin: 20px auto;
+        padding: 50px;
+        border: black solid;
+        border-radius: 5px;
+      }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-      axios.get('http://localhost:5000/movie').then((res) => {
-        console.log(res.data);
+      axios.get('http://localhost:5000/movies').then((res) => {
+        let movies = res.data.movies;
+        if (movies.length > 0) {
+          movies.forEach((element) => {
+            makeCard(element);
+          });
+        }
       });
-      let test = {
-        title: 'test1',
-        url: 'www.naver.com',
-        comment: 'comment this is awsome',
+      const sendMovieInfo = async () => {
+        let test = {
+          url: document.querySelector('#post-url').value,
+          comment: document.querySelector('#post-comment').value,
+        };
+
+        let res = await axios.post('http://localhost:5000/movie', test);
+        console.log(res);
+        if (res.data.result === 'success') {
+          makeCard(res.data.article);
+          alert('포스팅 성공');
+        } else {
+          alert('포스팅 실패');
+        }
+        openClose();
       };
-      axios.post('http://localhost:5000/movie', test).then((res) => {
-        console.log(res.data);
-      });
+      const openClose = () => {
+        let postBox = document.querySelector('#post-box');
+        postBox.style.display =
+          postBox.style.display === 'none' ? 'block' : 'none';
+      };
+      const makeCard = (card) => {
+        let cardsBox = document.querySelector('#cards-box');
+        let makeCardTag = `<div class="card">
+            <img
+              class="card-img-top"
+              src="${card.url_image}"
+              alt="${card.url_title} img"
+            />
+            <div class="card-body">
+              <a href="${
+                card.movie_url !== undefined ? card.movie_url : '#'
+              }" class="card-title" target="_blank">${card.url_title}</a>
+              <p class="card-text">
+                ${card.url_description}
+              </p>
+              <p class="card-text comment">${
+                card.comment !== undefined ? card.comment : ''
+              }</p>
+            </div>
+          </div>`;
+        cardsBox.insertAdjacentHTML('beforeend', makeCardTag);
+        //cardsBox.innerHTML = cardsBox.innerHTML + makeCardTag;
+      };
     </script>
   </head>
   <body>
-    <h1>Test123</h1>
+    <div class="wrap">
+      <div class="jumbotron">
+        <h1 class="display-4">나홀로 링크 메모장!</h1>
+        <p class="lead">
+          중요한 링크를 저장해두고, 나중에 볼 수 있는 공간입니다
+        </p>
+        <hr class="my-4" />
+        <p class="lead">
+          <button
+            onclick="openClose()"
+            id="btn-post-box"
+            type="button"
+            class="btn btn-primary"
+          >
+            포스팅 박스 열기
+          </button>
+        </p>
+      </div>
+      <div id="post-box" class="form-post" style="display: none">
+        <div>
+          <div class="form-group">
+            <label for="post-url">아티클 URL</label>
+            <input id="post-url" class="form-control" placeholder="" />
+          </div>
+          <div class="form-group">
+            <label for="post-comment">간단 코멘트</label>
+            <textarea
+              id="post-comment"
+              class="form-control"
+              rows="2"
+            ></textarea>
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="sendMovieInfo()"
+          >
+            기사저장
+          </button>
+        </div>
+      </div>
+      <div id="cards-box" class="card-columns"></div>
+    </div>
   </body>
 </html>
