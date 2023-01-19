@@ -13,25 +13,29 @@ with open('config.json', 'r') as f:
 def findMovieInfo(params):
     movie_url = params["url"];
     headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}
-    data = requests.get(movie_url,headers=headers)     
-    # HTML을 BeautifulSoup이라는 라이브러리를 활용해 검색하기 용이한 상태로 만듦
-    # soup이라는 변수에 "파싱 용이해진 html"이 담긴 상태가 됨
-    # 이제 코딩을 통해 필요한 부분을 추출하면 된다.
-    # 영화 정보를 통해 가져옴 => naver가 아닐 경우에 대하여 에러처리를 해줘야한다.
-    soup = BeautifulSoup(data.text, 'html.parser')
-    #print(soup)  # HTML을 받아온 것을 확인할 수 있다.
-    og_image = soup.select_one('meta[property="og:image"]')
-    og_title = soup.select_one('meta[property="og:title"]')
-    og_description = soup.select_one('meta[property="og:description"]')
+    try:
+        data = requests.get(movie_url,headers=headers)     
+        # HTML을 BeautifulSoup이라는 라이브러리를 활용해 검색하기 용이한 상태로 만듦
+        # soup이라는 변수에 "파싱 용이해진 html"이 담긴 상태가 됨
+        # 이제 코딩을 통해 필요한 부분을 추출하면 된다.
+        # 영화 정보를 통해 가져옴 => naver가 아닐 경우에 대하여 에러처리를 해줘야한다.
+        soup = BeautifulSoup(data.text, 'html.parser')
+        #print(soup)  # HTML을 받아온 것을 확인할 수 있다.
+        og_image = soup.select_one('meta[property="og:image"]')
+        og_title = soup.select_one('meta[property="og:title"]')
+        og_description = soup.select_one('meta[property="og:description"]')
 
-    url_image = og_image['content']
-    url_title = og_title['content']
-    url_description = og_description['content']
-    movieObj = {}
-    if url_image is not None:
-        movieObj = {"movie_url" : movie_url,"url_image" : url_image,"url_title":url_title,"url_description":url_description,"comment" : params["comment"]};
-        db.movieInfo.insert_one(movieObj)
-    return db.movieInfo.find_one({"url_title":url_title});
+        url_image = og_image['content']
+        url_title = og_title['content']
+        url_description = og_description['content']
+        movieObj = {}
+        if url_image is not None:
+            movieObj = {"movie_url" : movie_url,"url_image" : url_image,"url_title":url_title,"url_description":url_description,"comment" : params["comment"]};
+            db.movieInfo.insert_one(movieObj)
+        return db.movieInfo.find_one({"url_title":url_title});
+    except Exception as ex:
+        print(ex);
+        return {"url_image" : None};
 
     
 
@@ -58,8 +62,8 @@ def input_movieInfo():
         params = request.get_json()#해당 데이터 바인딩
         #print(params)
         returnObj = findMovieInfo(params);
-        returnObj['_id'] = str(returnObj['_id']);
         if returnObj["url_image"] is not None:
+            returnObj['_id'] = str(returnObj['_id']);
             return jsonify({"result":"success","resultCode":200,"article":returnObj});
         else :
             return jsonify({"result":"fail","resultCode":400});
